@@ -31,18 +31,35 @@
 
 number_of_images = $C320
 current_image = $C321
-image_name_pointers = $C322
+last_load_end_address_low = $C322
+last_load_end_address_high = $C323
+active_shown_screen = $C324
+;...
+image_name_pointers = $C325 ; space for 100 images...
+
+image_types = $C400
 
 dir_length_high = $C581 ; high byte counter
 dir_length_low = $C582  ; low byte counter
 dir_start = $C583	; write dir starting here
 
+;bitmap 1 = screen 1
+bitmap_1 = $2000
+screen_data_1 = $3f40
+color_data_1 = $4328
+common_color_1 = $4710 ; also last byte of screen 1
+screen_ram_1 = $400
 
-bitmap_address = $6000  ; koala $6000
-scrdata = 32576
-coldata = 33576
-scrram = 23552
-colram = 55296
+;bitmap 2 = screen 2
+bitmap_2 = $6000
+screen_data_2 = 32576
+color_data_2 = 33576
+common_color_2 = $8710 ; also last byte of screen 2
+screen_ram_2 = 23552
 
+;color ram
+color_ram = 55296
 
+;buffer 1
+buffer_1 = $9000
 

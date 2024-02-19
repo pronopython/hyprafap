@@ -35,8 +35,11 @@ cycle_images
 	sta current_image
 
 	loop_cycle_image
-		lda current_image
-		jsr load_image_by_number
+		lda number_of_images
+		beq no_images
+			lda current_image
+			jsr load_image_by_number
+		no_images
 		
 		cycle_images_scan_key_loop
 
@@ -64,7 +67,8 @@ cycle_images
 			jmp cycle_images_scan_key_loop
 
 			check_letter
-				cmp #71 ; "g" (one after "f")
+				;cmp #71 ; "g" (one after "f")
+				cmp #73 ; "i" (one after "h")
 				bcc handle_letter
 
 			; == I ==
@@ -74,6 +78,12 @@ cycle_images
 
 			cmp #82 ; "R"
 			beq keypress_R
+
+			cmp #133 ; f1
+			beq keypress_f1
+
+			cmp #134 ; f3
+			beq keypress_f3
 
 			jmp cycle_images_scan_key_loop ; no supported keypress
 
@@ -111,7 +121,15 @@ cycle_images
 				lda #0
 				sta current_image
 				jmp loop_cycle_image
-				
+			
+			keypress_f1
+				jsr show_screen_1
+				jmp cycle_images_scan_key_loop 
+
+			keypress_f3
+				jsr show_screen_2
+				jmp cycle_images_scan_key_loop 
+
 			check_biggest_image_number
 				lda current_image
 				sec
@@ -125,13 +143,50 @@ cycle_images
 load_image_by_number
 	; A: image number (0..number of images - 1)
 	; uses $FB,$FC,$FD
-	sta $FD
+
+	sta $FD ; remember image number
+
+	tay
+	lda image_types, y
+	cmp #$0
+	beq load_uncompressed
+
+	lda #$3 ; load into buffer
+	sta $FE
+
+	lda $FD
 	jsr get_filename_pointer
 	lda $FD
 	jsr calculate_image_filename_length
 	ldx $FB
 	ldy $FC
+
 	jsr load_image
+
+	lda active_shown_screen
+	jsr decompress_buffer
+	jsr show_selected_screen_after_load
+
+	rts
+
+
+	load_uncompressed
+
+	lda active_shown_screen
+	sta $FE
+
+	lda $FD
+	jsr get_filename_pointer
+	lda $FD
+	jsr calculate_image_filename_length
+	ldx $FB
+	ldy $FC
+
+
+	jsr load_image
+
+	jsr show_selected_screen_after_load
+
 	rts
 
 calculate_image_filename_length

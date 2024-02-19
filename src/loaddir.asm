@@ -103,13 +103,17 @@ loaddir
 
 		loop_dir_chars
 
+			; === Test suffix ===
+
 			cmp #46		; .
 			bne no_suffix
 			jsr loaddir_store_acc_char
 
+			; === Test koa ===
+
 			jsr loaddir_getbyte
 			cmp #75		; K
-			bne no_suffix
+			bne test_gg ; test next suffix (gg)
 			jsr loaddir_store_acc_char
 			
 			jsr loaddir_getbyte
@@ -120,36 +124,59 @@ loaddir
 			jsr loaddir_getbyte
 			cmp #65		; A
 			bne no_suffix
-			
 			jsr loaddir_store_acc_char ; match!
 
-			; store beginning of current filename
-			lda number_of_images
-			clc
-			rol
-			tay
-			lda $FD
-			sta image_name_pointers, y
-			clc
-			iny
-			lda $FE
-			sta image_name_pointers, y
-			clc
-			iny
-			lda dir_length_low
-			sta image_name_pointers, y
-			clc
-			iny
-			lda dir_length_high
-			sta image_name_pointers, y
+			lda #$0 ; image type koa
+			ldy number_of_images
+			sta image_types, y
 
-			; inc number of images
-			clc
-			inc number_of_images
+			found_image_store_filename
+				; store beginning of current filename
+				lda number_of_images
+				clc
+				rol
+				tay
+				lda $FD
+				sta image_name_pointers, y
+				clc
+				iny
+				lda $FE
+				sta image_name_pointers, y
+				clc
+				iny
+				lda dir_length_low
+				sta image_name_pointers, y
+				clc
+				iny
+				lda dir_length_high
+				sta image_name_pointers, y
 
-			; save END
+				; inc number of images
+				clc
+				inc number_of_images
 
-			jmp loop_end_name ; skip reset current mem pointer
+				; save END
+
+				jmp loop_end_name ; skip reset current mem pointer
+
+			; === Test gg ===
+			test_gg
+
+			;jsr loaddir_getbyte
+			cmp #71		; G
+			bne no_suffix
+			jsr loaddir_store_acc_char
+
+			jsr loaddir_getbyte
+			cmp #71		; G
+			bne no_suffix
+			jsr loaddir_store_acc_char
+
+			lda #$01 ; image type gg
+			ldy number_of_images
+			sta image_types, y
+
+			jmp found_image_store_filename
 
 			no_suffix
 	
