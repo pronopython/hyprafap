@@ -43,6 +43,8 @@
 	jsr init_multicolor
 	jsr clear_multicolor
 
+	jsr show_screen_1
+
 	jsr cycle_images
 
 	loop1				; TODO remove this infinite loop (border color cycle)
@@ -54,3 +56,4 @@
 .include "graphics.asm"
 .include "loadimage.asm"
 .include "control.asm"
+.include "rle.asm"

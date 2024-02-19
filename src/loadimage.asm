@@ -33,8 +33,14 @@ load_image
 	; A length filename
 	; X < image name
 	; Y > image name
+	; $FE Bank (0: screen 1, 1: screen 2, 3: buffer 1)
 
 	jsr $FFBD     ; call SETNAM
+
+	lda #$0
+	sta last_load_end_address_low
+	sta last_load_end_address_high
+
 	lda #$01
 	ldx $BA       ; last used device number
 	bne no_last_device
@@ -43,12 +49,33 @@ load_image
 	ldy #$00      ; $00 means: load to new address
 	jsr $FFBA     ; call SETLFS
 
-	ldx #<bitmap_address
-	ldy #>bitmap_address
+	ldx #<bitmap_1
+	ldy #>bitmap_1
+	lda $FE
+	cmp #$0
+	beq set_image_ok
+		ldx #<bitmap_2
+		ldy #>bitmap_2
+		cmp #$1
+		beq set_image_ok
+			ldx #<buffer_1
+			ldy #>buffer_1
+			; turn basic rom off
+			lda #$36
+			sta $0001
+		
+	set_image_ok
+	
 	lda #$00      ; $00 means: load to memory (not verify)
 	jsr $FFD5     ; call LOAD
 	bcs error_image_load    ; if carry set, a load error has happened
-        jmp copycolor	;RTS
+		stx last_load_end_address_low
+		sty last_load_end_address_high
+        ;jmp copycolor	;RTS
+		; turn basic rom on
+		lda #$37
+		sta $0001
+		rts
 	error_image_load
 		; Accumulator contains BASIC error code
 		; most likely errors:
@@ -60,36 +87,35 @@ load_image
 		;TODO error handling ...
 	rts
 
+;copycolor
 
-copycolor
+;	lda 34576
+;	sta 53281
 
-	lda 34576
-	sta 53281
+;	ldx #250
+;	loop_copy_color
+;		lda screen_data_2-1,x
+;		sta screen_ram_2-1,x
+;		lda screen_data_2+249,x
+;		sta screen_ram_2+249,x
+;		lda screen_data_2+499,x
+;		sta screen_ram_2+499,x
+;		lda screen_data_2+749,x
+;		sta screen_ram_2+749,x
 
-	ldx #250
-	loop_copy_color
-		lda scrdata-1,x
-		sta scrram-1,x
-		lda scrdata+249,x
-		sta scrram+249,x
-		lda scrdata+499,x
-		sta scrram+499,x
-		lda scrdata+749,x
-		sta scrram+749,x
+;		lda color_data_2-1,x
+;		sta color_ram-1,x
+;		lda color_data_2+249,x
+;		sta color_ram+249,x
+;		lda color_data_2+499,x
+;		sta color_ram+499,x
+;		lda color_data_2+749,x
+;		sta color_ram+749,x
 
-		lda coldata-1,x
-		sta colram-1,x
-		lda coldata+249,x
-		sta colram+249,x
-		lda coldata+499,x
-		sta colram+499,x
-		lda coldata+749,x
-		sta colram+749,x
+;		dex
+;	bne loop_copy_color
 
-		dex
-	bne loop_copy_color
-
-	rts
+;	rts
 
 
 
